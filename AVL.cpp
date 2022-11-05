@@ -83,23 +83,29 @@ void rebalanceHelper(AVL*& r)
     // Case 1: Right Right
     if(bf > 0 && childBf > 0)
     {
+        r->height-=2;
         r = r->leftRotate(r);
     }
     // Case 2: Left Left
     else if(bf < 0 && childBf < 0)
     {
+        r->height-=2;
         r = r->rightRotate(r);
     }
     // Case 3: Left Right
     else if(bf < 0 && childBf > 0)
     {
+        r->height-=2;
+        r->left->right->height++;
         r->left = r->leftRotate(r->left);
         r = r->rightRotate(r);
     }
     // Case 4: Right Left
     else if(bf > 0 && childBf < 0)
     {
-        r = r->rightRotate(r->right);
+        r->height-=2;
+        r->right->left->height++;
+        r->right = r->rightRotate(r->right);
         r = r->leftRotate(r);
     }
 }
@@ -306,12 +312,6 @@ AVL* AVL::leftRotate(AVL* r)
     newRoot->left = r;
     r->right = subTreeToTransplant;
 
-    //update root height
-    r->height = getHeight(r);
-
-    //update new root height
-    newRoot->height = getHeight(newRoot);
-
     return newRoot;
 }
 
@@ -322,12 +322,6 @@ AVL* AVL::rightRotate(AVL* r)
 
     newRoot->right = r;
     r->left = subTreeToTransplant;
-
-    //update root height
-    r->height = getHeight(r);
-
-    //update new root height
-    newRoot->height = getHeight(newRoot);
 
     return newRoot;
 }

@@ -23,14 +23,13 @@ std::string printTree(AVL* node)
 
 int main()
 {
-	AVL* tree = new AVL(20);
+	AVL* tree = new AVL(50);
 
-	tree = tree->insertNode(tree, 10);
-	tree = tree->insertNode(tree, 15);
+	tree = tree->insertNode(tree, 30);
+	tree = tree->insertNode(tree, 20);
 
 	std::cout << printTree(tree);
 	std::cout << "\nHEIGHT OF tree: " << tree->getHeight(tree) << std::endl;
-
 
 	return 0;
 }
