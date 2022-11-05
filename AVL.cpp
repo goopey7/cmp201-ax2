@@ -1,5 +1,6 @@
 #include "AVL.h"
 #include <sstream>
+#include <iostream>
 
 /*
 std::string printTree(AVL* node, std::ostringstream& oss,std::string prefix, bool bIsLeft)
@@ -22,63 +23,111 @@ std::string printTree(AVL* node)
 }
 */
 
+void preOrderRec(AVL* r, std::ostringstream& oss)
+{
+    if(r == nullptr)
+        return;
+    oss << r->data << " , ";
+    preOrderRec(r->left,oss);
+    preOrderRec(r->right,oss);
+}
 void AVL::preOrder(AVL* r)
 {
+    std::ostringstream oss;
+    std::cout << "PRE ORDER: {";
+    preOrderRec(r,oss);
+    std::cout << oss.str().substr(0,oss.str().size()-2);
+    std::cout << "}\n";
+}
+
+void inOrderRec(AVL* r, std::ostringstream& oss)
+{
+    if(r == nullptr)
+        return;
+    inOrderRec(r->left,oss);
+    oss << r->data << " , ";
+    inOrderRec(r->right,oss);
 }
 
 void AVL::inOrder(AVL* r)
 {
+    std::cout << "IN ORDER: {";
+    std::ostringstream oss;
+    inOrderRec(r,oss);
+    std::cout << oss.str().substr(0,oss.str().size()-2);
+    std::cout << "}\n";
 }
 
 int AVL::getBalance(AVL* r)
 {
-	return	0;
+    return std::abs(getHeight(r->right) - getHeight(r->left));
 }
 
 int AVL::getHeight(AVL* r)
 {
-	return	0;
+    // constant time
+    return r->height;
 }
 
-AVL* AVL::insertNode(AVL* r, int key)
+std::pair<AVL*,int> insertNodeRec(AVL* r, int key, int levels)
 {
 	//TODO REBALANCE AFTER INSERTION
     if(r == nullptr)
-        return nullptr;
+    {
+        return {nullptr,0};
+    }
 
-	if(r->data == key)
+    if(r->data == key)
 	{
-		return nullptr;
+        return {nullptr,0};
 	}
-	else if(key < r->data)
+
+	if(key < r->data)
 	{
         if(r->left != nullptr)
         {
-            return insertNode(r->left,key);
+            std::pair<AVL*,int> p = insertNodeRec(r->left,key,levels+1);
+            if(r->height < p.second - levels)
+            {
+                r->height = p.second - levels;
+            }
+            return p;
         }
         else
         {
+            r->height++;
             r->left = new AVL(key);
-            return r->left;
+            return {r,levels+2};
         }
 	}
 	else
 	{
         if(r->right != nullptr)
         {
-            return insertNode(r->right,key);
+            std::pair<AVL*,int> p = insertNodeRec(r->right,key,levels+1);
+            if(r->height < p.second - levels)
+            {
+                r->height = p.second - levels;
+            }
+            return p;
         }
         else
         {
+            r->height++;
             r->right = new AVL(key);
-            return r->right;
+            return {r,levels+2};
         }
 	}
+    return {r,0};
+}
+
+AVL* AVL::insertNode(AVL* r, int key)
+{
+    insertNodeRec(r,key,0);
+    return r;
 }
 
 /*
-// returns an int instead of a reference because this deletes the successor node for us
-// all in one fell swoop
 int findSuccessor(AVL* node)
 {
     if(node->left == nullptr)

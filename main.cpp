@@ -24,6 +24,8 @@ std::string printTree(AVL* node)
 int main()
 {
 	AVL tree(50);
+
+	/*
 	tree.insertNode(&tree,20);
 	tree.insertNode(&tree,15);
 	tree.insertNode(&tree,30);
@@ -34,10 +36,17 @@ int main()
 	tree.insertNode(&tree,40);
 	tree.insertNode(&tree,45);
 	tree.insertNode(&tree,145);
+	*/
+	tree.insertNode(&tree, 25);
+	tree.insertNode(&tree, 10);
+	tree.insertNode(&tree, 30);
+	tree.insertNode(&tree, 5);
+	tree.insertNode(&tree, 20);
 
-
-    tree.deleteNode(&tree,30);
-	std::cout << printTree(&tree);
+	//std::cout << printTree(&tree);
+	std::cout << "\nHEIGHT OF tree: " << tree.getHeight(&tree) << std::endl;
+	tree.preOrder(&tree);
+	tree.inOrder(&tree);
 
 
 	return 0;
