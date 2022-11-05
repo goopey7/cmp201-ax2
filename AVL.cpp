@@ -61,18 +61,68 @@ void AVL::inOrder(AVL* r)
 
 int AVL::getBalance(AVL* r)
 {
-    return std::abs(getHeight(r->right) - getHeight(r->left));
+    return getHeight(r->right) - getHeight(r->left);
 }
 
 int AVL::getHeight(AVL* r)
 {
+    if(r == nullptr)
+    {
+        return 0;
+    }
     // constant time
     return r->height;
 }
 
+void rebalanceHelper(AVL*& r)
+{
+    // figure out which case
+    int bf = r->getBalance(r);
+    int childBf = (r->left == nullptr) ? r->getBalance(r->right) : r->getBalance(r->left);
+
+    // Case 1: Right Right
+    if(bf > 0 && childBf > 0)
+    {
+        r = r->leftRotate(r);
+    }
+    // Case 2: Left Left
+    else if(bf < 0 && childBf < 0)
+    {
+        r = r->rightRotate(r);
+    }
+    // Case 3: Left Right
+    else if(bf < 0 && childBf > 0)
+    {
+        r->left = r->leftRotate(r->left);
+        r = r->rightRotate(r);
+    }
+    // Case 4: Right Left
+    else if(bf > 0 && childBf < 0)
+    {
+        r = r->rightRotate(r->right);
+        r = r->leftRotate(r);
+    }
+}
+
+void rebalance(AVL*& r)
+{
+    if(std::abs(r->getBalance(r)) > 1)
+    {
+        rebalanceHelper(r);
+    }
+}
+
+void rebalanceSweep(AVL*& r)
+{
+    if(r==nullptr)
+        return;
+    rebalance(r);
+    rebalanceSweep(r->left);
+    rebalanceSweep(r->right);
+}
+
 std::pair<AVL*,int> insertNodeRec(AVL* r, int key, int levels)
 {
-	//TODO REBALANCE AFTER INSERTION
     if(r == nullptr)
     {
         return {nullptr,0};
@@ -128,6 +178,7 @@ std::pair<AVL*,int> insertNodeRec(AVL* r, int key, int levels)
 AVL* AVL::insertNode(AVL* r, int key)
 {
     insertNodeRec(r,key,0);
+    rebalanceSweep(r);
     return r;
 }
 
@@ -155,8 +206,6 @@ AVL* findSuccessor(AVL* node)
 
 std::pair<AVL*,int> deleteRec(AVL*& r, int key, int levels, AVL*& parent)
 {
-    // TODO REBALANCE AFTER DELETION
-
     // base case we hit a leaf, so not found, return nothing
     if(r == nullptr)
     {
@@ -188,7 +237,6 @@ std::pair<AVL*,int> deleteRec(AVL*& r, int key, int levels, AVL*& parent)
         // Case 1: Deleting a leaf node
         if(r->left == nullptr && r->right == nullptr)
         {
-            //TODO we need to fill the pointer with nullptr somehow
             delete r;
             r = nullptr;
             return {nullptr,levels};
@@ -246,17 +294,42 @@ AVL* AVL::deleteNode(AVL* r, int key)
 {
     AVL* parent = nullptr;
     deleteRec(r,key,0,parent);
+    rebalanceSweep(r);
     return r;
 }
 
 AVL* AVL::leftRotate(AVL* r)
 {
-	return nullptr;
+    AVL* newRoot = r->right;
+    AVL* subTreeToTransplant = newRoot->left;
+
+    newRoot->left = r;
+    r->right = subTreeToTransplant;
+
+    //update root height
+    r->height = getHeight(r);
+
+    //update new root height
+    newRoot->height = getHeight(newRoot);
+
+    return newRoot;
 }
 
 AVL* AVL::rightRotate(AVL* r)
 {
-	return nullptr;
+    AVL* newRoot = r->left;
+    AVL* subTreeToTransplant = newRoot->right;
+
+    newRoot->right = r;
+    r->left = subTreeToTransplant;
+
+    //update root height
+    r->height = getHeight(r);
+
+    //update new root height
+    newRoot->height = getHeight(newRoot);
+
+    return newRoot;
 }
 
 int AVL::max(int a, int b)
