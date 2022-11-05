@@ -27,7 +27,7 @@ void preOrderRec(AVL* r, std::ostringstream& oss)
 {
     if(r == nullptr)
         return;
-    oss << r->data << " , ";
+    oss << r->height << " , ";
     preOrderRec(r->left,oss);
     preOrderRec(r->right,oss);
 }
@@ -82,6 +82,11 @@ std::pair<AVL*,int> insertNodeRec(AVL* r, int key, int levels)
         return {nullptr,0};
 	}
 
+    if(r->right == nullptr && r->left == nullptr)
+    {
+        r->height++;
+    }
+
 	if(key < r->data)
 	{
         if(r->left != nullptr)
@@ -95,7 +100,6 @@ std::pair<AVL*,int> insertNodeRec(AVL* r, int key, int levels)
         }
         else
         {
-            r->height++;
             r->left = new AVL(key);
             return {r,levels+2};
         }
@@ -113,7 +117,6 @@ std::pair<AVL*,int> insertNodeRec(AVL* r, int key, int levels)
         }
         else
         {
-            r->height++;
             r->right = new AVL(key);
             return {r,levels+2};
         }
@@ -149,7 +152,7 @@ AVL* findSuccessor(AVL* node)
     return findSuccessor(node->left);
 }
 
-AVL* AVL::deleteNode(AVL* r, int key)
+AVL* deleteRec(AVL* r, int key)
 {
     // TODO REBALANCE AFTER DELETION
 
@@ -161,11 +164,11 @@ AVL* AVL::deleteNode(AVL* r, int key)
 
     if(key < r->data) // key is smaller so look left
     {
-        return deleteNode(r->left,key);
+        return deleteRec(r->left,key);
     }
     else if(key > r->data) // key is larger so look right
     {
-        return deleteNode(r->right,key);
+        return deleteRec(r->right,key);
     }
     else // key matches. We want to delete this node
     {
@@ -206,17 +209,23 @@ AVL* AVL::deleteNode(AVL* r, int key)
                 {
                     parent = parent->left;
                 }
-                parent->left = deleteNode(parent->left,r->data);
+                parent->left = deleteRec(parent->left,r->data);
                 return parent->left;
             }
             else // we only went right once for successor, so therefore root is direct parent
             {
                 parent = r;
-                parent->right = deleteNode(parent->right, r->data);
+                parent->right = deleteRec(parent->right, r->data);
                 return parent->right;
             }
         }
     }
+}
+
+AVL* AVL::deleteNode(AVL* r, int key)
+{
+    deleteRec(r,key);
+    return r;
 }
 
 AVL* AVL::leftRotate(AVL* r)
