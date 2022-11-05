@@ -38,10 +38,11 @@ int main()
 	tree.insertNode(&tree,145);
 	*/
 	tree.insertNode(&tree, 25);
-	tree.insertNode(&tree, 10);
 	tree.insertNode(&tree, 30);
 	tree.insertNode(&tree, 5);
 	tree.insertNode(&tree, 20);
+
+	tree.deleteNode(&tree,20);
 
 	//std::cout << printTree(&tree);
 	std::cout << "\nHEIGHT OF tree: " << tree.getHeight(&tree) << std::endl;
