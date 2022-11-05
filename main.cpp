@@ -42,12 +42,13 @@ int main()
 	tree.insertNode(&tree, 5);
 	tree.insertNode(&tree, 20);
 
-	tree.deleteNode(&tree,20);
+	tree.preOrder(&tree);
+
+	tree.deleteNode(&tree,5);
 
 	//std::cout << printTree(&tree);
 	std::cout << "\nHEIGHT OF tree: " << tree.getHeight(&tree) << std::endl;
 	tree.preOrder(&tree);
-	tree.inOrder(&tree);
 
 
 	return 0;

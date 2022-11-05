@@ -27,10 +27,11 @@ void preOrderRec(AVL* r, std::ostringstream& oss)
 {
     if(r == nullptr)
         return;
-    oss << r->height << " , ";
+    oss << r->data << " , ";
     preOrderRec(r->left,oss);
     preOrderRec(r->right,oss);
 }
+
 void AVL::preOrder(AVL* r)
 {
     std::ostringstream oss;
@@ -152,7 +153,7 @@ AVL* findSuccessor(AVL* node)
     return findSuccessor(node->left);
 }
 
-std::pair<AVL*,int> deleteRec(AVL*& r, int key, int levels)
+std::pair<AVL*,int> deleteRec(AVL*& r, int key, int levels, AVL*& parent)
 {
     // TODO REBALANCE AFTER DELETION
 
@@ -164,7 +165,7 @@ std::pair<AVL*,int> deleteRec(AVL*& r, int key, int levels)
 
     if(key < r->data) // key is smaller so look left
     {
-        std::pair<AVL*,int> p = deleteRec(r->left,key,levels+1);
+        std::pair<AVL*,int> p = deleteRec(r->left,key,levels+1,r);
         if(p.second > 0)
         {
             r->height--;
@@ -174,7 +175,7 @@ std::pair<AVL*,int> deleteRec(AVL*& r, int key, int levels)
     }
     else if(key > r->data) // key is larger so look right
     {
-        std::pair<AVL*,int> p = deleteRec(r->right,key,levels+1);
+        std::pair<AVL*,int> p = deleteRec(r->right,key,levels+1,r);
         if(p.second > 0)
         {
             r->height--;
@@ -196,8 +197,10 @@ std::pair<AVL*,int> deleteRec(AVL*& r, int key, int levels)
         else if(r->left == nullptr || r->right == nullptr)
         {
             AVL* child = r->left == nullptr ? r->right : r->left;
+            AVL*& parentPointerToChild = r->data < parent->data ? parent->left : parent->right;
             delete r;
             r = nullptr;
+            parentPointerToChild = child;
             return {child,levels};
         }
         // Case 3: Deleting a node with two children
@@ -224,14 +227,14 @@ std::pair<AVL*,int> deleteRec(AVL*& r, int key, int levels)
                 {
                     parent = parent->left;
                 }
-                std::pair<AVL*,int> p = deleteRec(parent->left,r->data,levels+1);
+                std::pair<AVL*,int> p = deleteRec(parent->left,r->data,levels+1,r);
                 parent->left = p.first;
                 return {parent->left,0};
             }
             else // we only went right once for successor, so therefore root is direct parent
             {
                 parent = r;
-                std::pair<AVL*,int> p = deleteRec(parent->right, r->data,levels+1);
+                std::pair<AVL*,int> p = deleteRec(parent->right, r->data,levels+1,r);
                 parent->right = p.first;
                 return {parent->right,0};
             }
@@ -241,7 +244,8 @@ std::pair<AVL*,int> deleteRec(AVL*& r, int key, int levels)
 
 AVL* AVL::deleteNode(AVL* r, int key)
 {
-    deleteRec(r,key,0);
+    AVL* parent = nullptr;
+    deleteRec(r,key,0,parent);
     return r;
 }
 
