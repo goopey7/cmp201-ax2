@@ -27,6 +27,8 @@ int main()
 
 	tree = tree->insertNode(tree, 30);
 	tree = tree->insertNode(tree, 20);
+	tree = tree->insertNode(tree, 40);
+	tree = tree->insertNode(tree, 45);
 
 	std::cout << printTree(tree);
 	std::cout << "\nHEIGHT OF tree: " << tree->getHeight(tree) << std::endl;

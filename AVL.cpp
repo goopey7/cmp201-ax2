@@ -78,7 +78,9 @@ void rebalanceHelper(AVL*& r)
 {
     // figure out which case
     int bf = r->getBalance(r);
-    int childBf = (r->left == nullptr) ? r->getBalance(r->right) : r->getBalance(r->left);
+    int leftBf = (r->left == nullptr) ? -1 : r->getBalance(r->left);
+    int rightBf = (r->right == nullptr) ? -1 : r->getBalance(r->right);
+    int childBf = std::abs(leftBf) > std::abs(rightBf) ? leftBf : rightBf;
 
     // Case 1: Right Right
     if(bf > 0 && childBf > 0)
