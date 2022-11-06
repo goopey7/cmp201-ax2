@@ -2,27 +2,7 @@
 #include <sstream>
 #include <iostream>
 
-/*
-std::string printTree(AVL* node, std::ostringstream& oss,std::string prefix, bool bIsLeft)
-{
-    if(node != nullptr)
-    {
-        oss << (bIsLeft ? "├──" : "└──" );
-        oss << node->data << '\n';
-
-        printTree(node,oss,prefix + (bIsLeft ? "│   " : "    "), true);
-        printTree(node,oss,prefix + (bIsLeft ? "│   " : "    "), false);
-    }
-    return oss.str();
-}
-
-std::string printTree(AVL* node)
-{
-    std::ostringstream oss;
-    return printTree(node,oss,"",false);
-}
-*/
-
+// recusively print nodes root, left, right
 void preOrderRec(AVL* r, std::ostringstream& oss)
 {
     if(r == nullptr)
@@ -32,6 +12,7 @@ void preOrderRec(AVL* r, std::ostringstream& oss)
     preOrderRec(r->right,oss);
 }
 
+// recusively print nodes left, root, right
 void AVL::preOrder(AVL* r)
 {
     std::ostringstream oss;
@@ -64,6 +45,9 @@ int AVL::getBalance(AVL* r)
     return getHeight(r->right) - getHeight(r->left);
 }
 
+// yeah that's right. Height doesn't even get calculated here
+// height gets modified every single time theres a rebalance, insertion, or deletion
+// so all we gotta do now is return it
 int AVL::getHeight(AVL* r)
 {
     if(r == nullptr)
@@ -74,13 +58,26 @@ int AVL::getHeight(AVL* r)
     return r->height;
 }
 
+// rebalances a given a root node
 void rebalanceHelper(AVL*& r)
 {
-    // figure out which case
-    int bf = r->getBalance(r);
-    int leftBf = (r->left == nullptr) ? -1 : r->getBalance(r->left);
-    int rightBf = (r->right == nullptr) ? -1 : r->getBalance(r->right);
-    int childBf = std::abs(leftBf) > std::abs(rightBf) ? leftBf : rightBf;
+	// figure out which case
+	int bf = r->getBalance(r);
+	int leftBf = (r->left == nullptr) ? -1 : r->getBalance(r->left);
+	int rightBf = (r->right == nullptr) ? -1 : r->getBalance(r->right);
+	// the the rotations we end up doing depend on which child we go with
+	// whichever child has the larger balance factor is the one that we'll go with
+	int childBf = std::abs(leftBf) > std::abs(rightBf) ? leftBf : rightBf;
+
+	// If there are only 4 chains of rotations that can happen
+	// there are also only 4 different ways heights can change
+	// so instead of modifying height in the rotation function,
+	// we just have to manually modify height depending on each case
+
+	// in order to determine how the height changes just draw it
+	// and play out the rotations
+
+	// all height calculations everywhere are constant time with this approach
 
     // Case 1: Right Right
     if(bf > 0 && childBf > 0)
@@ -112,6 +109,7 @@ void rebalanceHelper(AVL*& r)
     }
 }
 
+// just checks if we should rebalance and calls helper if so
 void rebalance(AVL*& r)
 {
     if(std::abs(r->getBalance(r)) > 1)
@@ -120,6 +118,7 @@ void rebalance(AVL*& r)
     }
 }
 
+// goes through checking and rebalancing everything in the tree
 void rebalanceSweep(AVL*& r)
 {
     if(r==nullptr)
@@ -129,40 +128,61 @@ void rebalanceSweep(AVL*& r)
     rebalanceSweep(r->right);
 }
 
+// cheeky helper function
+// this allows us to keep track of levels of recursion
+// and everytime we enter a level of recursion we go one level
+// down in the tree
+// so we can calculate height on the fly
 std::pair<AVL*,int> insertNodeRec(AVL* r, int key, int levels)
 {
+	// base case - shouldn't ever happen but just in case - no insertion
     if(r == nullptr)
     {
         return {nullptr,0};
     }
 
+	// found a match - no duplicates allowed - no insertion
     if(r->data == key)
 	{
         return {nullptr,0};
 	}
 
+	// if we made it this far, we are 100% gonna insert something
+	// if we are gonna insert down a new level increment height
     if(r->right == nullptr && r->left == nullptr)
     {
         r->height++;
     }
 
+	// go left because what we want to insert is smaller
 	if(key < r->data)
 	{
+		// if there's something on the left already
+		// gonna need to recurse downwards another level
         if(r->left != nullptr)
         {
             std::pair<AVL*,int> p = insertNodeRec(r->left,key,levels+1);
+			// we inserted something below us
+			// therefore we must change the height
+			// p.second is the amount of levels down which the insertion took place
+			// so if we subtract our current recursion level, we can get what our height should be
             if(r->height < p.second - levels)
             {
                 r->height = p.second - levels;
             }
             return p;
         }
+		// there's nothing on the left
+		// so we're good to insert there
         else
         {
             r->left = new AVL(key);
             return {r,levels+2};
+			// levels + 2 because first function call is level 0
+			// and then also add 1 because we just added something one further level down
         }
 	}
+	// go right - (Same ordeal as going left)
 	else
 	{
         if(r->right != nullptr)
@@ -183,6 +203,7 @@ std::pair<AVL*,int> insertNodeRec(AVL* r, int key, int levels)
     return {r,0};
 }
 
+// gonna use a cheeky helper function to do the actual insertion
 AVL* AVL::insertNode(AVL* r, int key)
 {
     insertNodeRec(r,key,0);
@@ -190,28 +211,9 @@ AVL* AVL::insertNode(AVL* r, int key)
     return r;
 }
 
-/*
-int findSuccessor(AVL* node)
-{
-    if(node->left == nullptr)
-    {
-        int successor = node->data;
-        node->deleteNode(node,successor);
-        return successor;
-    }
-    return findSuccessor(node->left);
-}
-*/
-
-AVL* findSuccessor(AVL* node)
-{
-    if(node->left == nullptr)
-    {
-        return node;
-    }
-    return findSuccessor(node->left);
-}
-
+// Another cheeky helper function
+// this allows me to modify the pointer passed in
+// also keeps track of levels and allows us to easily refer to the parent
 std::pair<AVL*,int> deleteRec(AVL*& r, int key, int levels, AVL*& parent)
 {
     // base case we hit a leaf, so not found, return nothing
@@ -220,9 +222,12 @@ std::pair<AVL*,int> deleteRec(AVL*& r, int key, int levels, AVL*& parent)
         return {nullptr,0};
     }
 
-    if(key < r->data) // key is smaller so look left
+	// key is smaller so look left
+    if(key < r->data)
     {
         std::pair<AVL*,int> p = deleteRec(r->left,key,levels+1,r);
+		// we just deleted something below us
+		// p.second represents how many times we have to decrement height up the way
         if(p.second > 0)
         {
             r->height--;
@@ -230,6 +235,7 @@ std::pair<AVL*,int> deleteRec(AVL*& r, int key, int levels, AVL*& parent)
         }
         return p;
     }
+	// same ordeal as left for the right side
     else if(key > r->data) // key is larger so look right
     {
         std::pair<AVL*,int> p = deleteRec(r->right,key,levels+1,r);
@@ -246,17 +252,24 @@ std::pair<AVL*,int> deleteRec(AVL*& r, int key, int levels, AVL*& parent)
         if(r->left == nullptr && r->right == nullptr)
         {
             delete r;
-            r = nullptr;
+            r = nullptr; // pointer is passed by reference
             return {nullptr,levels};
         }
         // Case 2: Deleting a node with a single child
         else if(r->left == nullptr || r->right == nullptr)
         {
+			// quick and slick ternary operation to get the child
             AVL* child = r->left == nullptr ? r->right : r->left;
+			// using our parent, get their pointer to us
             AVL*& parentPointerToChild = r->data < parent->data ? parent->left : parent->right;
+
+			// delete 
             delete r;
             r = nullptr;
+
+			// have parent point to what was our child
             parentPointerToChild = child;
+
             return {child,levels};
         }
         // Case 3: Deleting a node with two children

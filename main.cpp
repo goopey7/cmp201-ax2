@@ -2,6 +2,10 @@
 #include "AVL.h"
 #include <sstream>
 
+// Prints tree all nice and pretty
+// Adrian Schneider - https://stackoverflow.com/questions/36802354/print-binary-tree-in-a-pretty-way-using-c
+// since we can only print right and down, we present the binary tree horizontally
+// I cannot take full credit for this implementation
 std::string printTree(AVL* node, std::ostringstream& oss,std::string prefix, bool bIsLeft)
 {
     if(node != nullptr)
