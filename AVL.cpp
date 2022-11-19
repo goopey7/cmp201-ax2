@@ -2,6 +2,29 @@
 #include <sstream>
 #include <iostream>
 
+// Prints tree all nice and pretty
+// Adrian Schneider - https://stackoverflow.com/questions/36802354/print-binary-tree-in-a-pretty-way-using-c
+// since we can only print right and down, we present the binary tree horizontally
+// I cannot take full credit for this implementation
+std::string printTree(AVL* node, std::ostringstream& oss,std::string prefix, bool bIsLeft)
+{
+    if(node != nullptr)
+    {
+        oss << prefix << (bIsLeft ? "├──" : "└──" );
+        oss << node->data << "h" << node->height << '\n';
+
+        printTree(node->left,oss,prefix + (bIsLeft ? "│   " : "    "), true);
+        printTree(node->right,oss,prefix + (bIsLeft ? "│   " : "    "), false);
+    }
+    return oss.str();
+}
+
+std::string printTree(AVL* node)
+{
+    std::ostringstream oss;
+    return printTree(node,oss,"",false);
+}
+
 // recusively print nodes root, left, right
 void preOrderRec(AVL* r, std::ostringstream& oss)
 {
@@ -46,7 +69,7 @@ int AVL::getBalance(AVL* r)
 }
 
 // yeah that's right. Height doesn't even get calculated here
-// height gets modified every single time theres a rebalance, insertion, or deletion
+// height gets modified every single time there's a rebalance, insertion, or deletion
 // so all we gotta do now is return it
 int AVL::getHeight(AVL* r)
 {
@@ -54,12 +77,11 @@ int AVL::getHeight(AVL* r)
     {
         return 0;
     }
-    // constant time
     return r->height;
 }
 
 // rebalances a given a root node
-void rebalanceHelper(AVL*& r)
+void rebalance(AVL*& r)
 {
 	// figure out which case
 	int bf = r->getBalance(r);
@@ -109,21 +131,21 @@ void rebalanceHelper(AVL*& r)
     }
 }
 
-// just checks if we should rebalance and calls helper if so
-void rebalance(AVL*& r)
-{
-    if(std::abs(r->getBalance(r)) > 1)
-    {
-        rebalanceHelper(r);
-    }
-}
-
 // goes through checking and rebalancing everything in the tree
 void rebalanceSweep(AVL*& r)
 {
     if(r==nullptr)
         return;
-    rebalance(r);
+    if(std::abs(r->getBalance(r)) > 1)
+    {
+        std::cout << "REBALANCING >>>>> \n";
+        std::cout << "=========================\n";
+        std::cout << printTree(r);
+        std::cout << "*************************\n";
+        rebalance(r);
+        std::cout << printTree(r);
+        std::cout << "=========================\n";
+    }
     rebalanceSweep(r->left);
     rebalanceSweep(r->right);
 }
@@ -346,3 +368,19 @@ int AVL::max(int a, int b)
     return a > b ? a : b;
 }
 
+int main()
+{
+	AVL* tree = new AVL(50);
+
+	tree = tree->insertNode(tree,2);
+	tree = tree->insertNode(tree,1);
+	tree = tree->insertNode(tree,49);
+	tree = tree->insertNode(tree,47);
+	tree = tree->insertNode(tree,45);
+	tree = tree->insertNode(tree,48);
+
+	std::cout << printTree(tree);
+	std::cout << "\nHEIGHT OF tree: " << tree->getHeight(tree) << std::endl;
+
+	return 0;
+}

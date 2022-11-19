@@ -2,6 +2,7 @@
 #include "AVL.h"
 #include <sstream>
 
+/*
 // Prints tree all nice and pretty
 // Adrian Schneider - https://stackoverflow.com/questions/36802354/print-binary-tree-in-a-pretty-way-using-c
 // since we can only print right and down, we present the binary tree horizontally
@@ -29,10 +30,9 @@ int main()
 {
 	AVL* tree = new AVL(50);
 
-	tree = tree->insertNode(tree, 30);
-	tree = tree->insertNode(tree, 20);
-	tree = tree->insertNode(tree, 40);
-	tree = tree->insertNode(tree, 45);
+	tree = tree->insertNode(tree, 75);
+	tree = tree->insertNode(tree, 60);
+	tree = tree->insertNode(tree, 80);
 
 	std::cout << printTree(tree);
 	std::cout << "\nHEIGHT OF tree: " << tree->getHeight(tree) << std::endl;
@@ -40,3 +40,4 @@ int main()
 	return 0;
 }
 
+*/
