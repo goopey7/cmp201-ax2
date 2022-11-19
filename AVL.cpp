@@ -104,13 +104,7 @@ void rebalance(AVL*& r)
     // Case 1: Right Right
     if(bf > 0 && childBf > 0)
     {
-        std::cout << "LEFT ROTATION!\n";
-        std::cout << "==============\n";
-        std::cout << printTree(r);
         r = r->leftRotate(r);
-        std::cout << "**************\n";
-        std::cout << printTree(r);
-        std::cout << "==============\n";
     }
     // Case 2: Left Left
     else if(bf < 0 && childBf < 0)
@@ -253,7 +247,7 @@ std::pair<AVL*,int> deleteRec(AVL*& r, int key, int levels, AVL*& parent)
 		// p.second represents how many times we have to decrement height up the way
         if(p.second > 0)
         {
-            r->height--;
+            //r->height--;
             p.second--;
         }
         return p;
@@ -264,7 +258,7 @@ std::pair<AVL*,int> deleteRec(AVL*& r, int key, int levels, AVL*& parent)
         std::pair<AVL*,int> p = deleteRec(r->right,key,levels+1,r);
         if(p.second > 0)
         {
-            r->height--;
+            //r->height--;
             p.second--;
         }
         return p;
@@ -300,16 +294,43 @@ std::pair<AVL*,int> deleteRec(AVL*& r, int key, int levels, AVL*& parent)
         {
             // find and delete successor - go right once and then go left like there's no tomorrow
             AVL* successor = r->right;
+            bool bSuccessorHasSibling = r->left != nullptr;
+            AVL* successorSibling = r->left;
+            AVL* successorParent = r;
+            
             int lefts = 0;
             while(successor->left != nullptr)
             {
+                bSuccessorHasSibling = successor->right != nullptr;
+                successorSibling = successor->right;
+                successorParent = successor;
                 successor = successor->left;
                 lefts++;
             }
 
             // copy successor data and height over to the node we were removing
             r->data = successor->data;
-            r->height = successor->height;
+            if(lefts == 0)
+            {
+                r->height = successor->height;
+
+                // recalculate height
+                int leftHeight = 0;
+                int rightHeight = 0;
+                if(r->left != nullptr)
+                {
+                    leftHeight = r->left->height;
+                }
+                if(r->right != nullptr)
+                {
+                    rightHeight = r->right->height;
+                }
+                r->height = 1 + std::max(leftHeight,rightHeight);
+            }
+            else if(!bSuccessorHasSibling)
+            {
+                successorParent->height--;
+            }
 
             // delete the successor
             AVL* parent;
@@ -412,7 +433,6 @@ AVL* AVL::rightRotate(AVL* r)
 
     // recalculate old root height
     // if our height was based on our old child's height
-    if(newRootHeightBeforeChange == r->height - 1)
     {
         // recalculate old root height
         int leftHeight = 0;
@@ -429,7 +449,6 @@ AVL* AVL::rightRotate(AVL* r)
     }
 
     // recalculate new root height
-    if(newRoot->left != nullptr)
     {
         int leftHeight = 0;
         int rightHeight = 0;
@@ -499,7 +518,10 @@ int main()
     std::cout << (isBalanced(tree) ? "TREE IS BALANCED\n" : "TREE IS NOT BALANCED\n");
     std::cout << "TREE BALANCE FACTOR: " << tree->getBalance(tree) << std::endl;
 
-    //tree = tree->deleteNode(tree, 1);
+    tree = tree->deleteNode(tree, 1);
+    tree = tree->deleteNode(tree, 45);
+    tree = tree->deleteNode(tree, 47);
+    tree = tree->deleteNode(tree, 118);
 
 	std::cout << printTree(tree);
 	std::cout << "\nHEIGHT OF TREE: " << getHeightRec(tree) << std::endl;
