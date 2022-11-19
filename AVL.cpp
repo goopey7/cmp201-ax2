@@ -132,13 +132,14 @@ void rebalanceSweep(AVL*& r)
         return;
     if(std::abs(r->getBalance(r)) > 1)
     {
-        std::cout << "REBALANCING >>>>> \n";
+        std::cout << "REBALANCING!\n";
         std::cout << "=========================\n";
         std::cout << printTree(r);
         std::cout << "*************************\n";
         rebalance(r);
         std::cout << printTree(r);
         std::cout << "=========================\n";
+        return;
     }
     rebalanceSweep(r->left);
     rebalanceSweep(r->right);
@@ -341,11 +342,11 @@ AVL* AVL::leftRotate(AVL* r)
     AVL* newRoot = r->right;
     AVL* subTreeToTransplant = newRoot->left;
 
-	bool bWasLeafPriorToRotation = newRoot->left != nullptr || newRoot->right != nullptr;
+	bool bWasLeafPriorToRotation = newRoot->left == nullptr && newRoot->right == nullptr;
     newRoot->left = r;
     r->right = subTreeToTransplant;
 
-    if(bWasLeafPriorToRotation)
+    if(!bWasLeafPriorToRotation)
     {
         r->height-=2;
     }
@@ -363,11 +364,11 @@ AVL* AVL::rightRotate(AVL* r)
     AVL* newRoot = r->left;
     AVL* subTreeToTransplant = newRoot->right;
 
-	bool bWasLeafPriorToRotation = newRoot->left != nullptr || newRoot->right != nullptr;
+	bool bWasLeafPriorToRotation = newRoot->left == nullptr && newRoot->right == nullptr;
     newRoot->right = r;
     r->left = subTreeToTransplant;
 
-    if(bWasLeafPriorToRotation)
+    if(!bWasLeafPriorToRotation)
     {
         r->height-=2;
     }
@@ -385,9 +386,20 @@ int AVL::max(int a, int b)
     return a > b ? a : b;
 }
 
+int getHeightRec(AVL* r)
+{
+    if(r == nullptr)
+    {
+        return 0;
+    }
+    return 1 + std::max(getHeightRec(r->left), getHeightRec(r->right));
+}
+
 bool isBalanced(AVL* r)
 {
-    if(std::abs(r->getBalance(r)) <= 1)
+    // get balance regardless of how height is in struct
+    int bf = getHeightRec(r->right) - getHeightRec(r->left);
+    if(std::abs(bf) <= 1)
     {
         return true;
     }
@@ -399,29 +411,21 @@ int main()
 	AVL* tree = new AVL(50);
 
     tree = tree->insertNode(tree,1);
-	tree = tree->insertNode(tree,-69);
+	tree = tree->insertNode(tree,0);
 	tree = tree->insertNode(tree,49);
 	tree = tree->insertNode(tree,47);
-	tree = tree->insertNode(tree,45);
-	tree = tree->insertNode(tree,48);
-	tree = tree->insertNode(tree,46);
-	tree = tree->insertNode(tree,120);
-	tree = tree->insertNode(tree,118);
-	tree = tree->insertNode(tree,110);
-	tree = tree->insertNode(tree,200);
-	tree = tree->insertNode(tree,119);
 
 	std::cout << printTree(tree);
 	std::cout << "\nHEIGHT OF TREE: " << tree->getHeight(tree) << std::endl;
     std::cout << (isBalanced(tree) ? "TREE IS BALANCED\n" : "TREE IS NOT BALANCED\n");
     std::cout << "TREE BALANCE FACTOR: " << tree->getBalance(tree) << std::endl;
 
-    tree = tree->deleteNode(tree, 1);
+    //tree = tree->deleteNode(tree, 1);
 
 	std::cout << printTree(tree);
-	std::cout << "\nHEIGHT OF TREE: " << tree->getHeight(tree) << std::endl;
+	std::cout << "\nHEIGHT OF TREE: " << getHeightRec(tree) << std::endl;
     std::cout << (isBalanced(tree) ? "TREE IS BALANCED\n" : "TREE IS NOT BALANCED\n");
-    std::cout << "TREE BALANCE FACTOR: " << tree->getBalance(tree) << std::endl;
+    std::cout << "TREE BALANCE FACTOR: " << getHeightRec(tree->right) - getHeightRec(tree->left) << std::endl;
 
 	return 0;
 }
