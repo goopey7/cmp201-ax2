@@ -104,28 +104,22 @@ void rebalance(AVL*& r)
     // Case 1: Right Right
     if(bf > 0 && childBf > 0)
     {
-        r->height-=2;
         r = r->leftRotate(r);
     }
     // Case 2: Left Left
     else if(bf < 0 && childBf < 0)
     {
-        r->height-=2;
         r = r->rightRotate(r);
     }
     // Case 3: Left Right
     else if(bf < 0 && childBf > 0)
     {
-        r->height-=2;
-        r->left->right->height++;
         r->left = r->leftRotate(r->left);
         r = r->rightRotate(r);
     }
     // Case 4: Right Left
     else if(bf > 0 && childBf < 0)
     {
-        r->height-=2;
-        r->right->left->height++;
         r->right = r->rightRotate(r->right);
         r = r->leftRotate(r);
     }
@@ -306,8 +300,9 @@ std::pair<AVL*,int> deleteRec(AVL*& r, int key, int levels, AVL*& parent)
                 lefts++;
             }
 
-            // copy successor data over to the node we were removing
+            // copy successor data and height over to the node we were removing
             r->data = successor->data;
+            r->height = successor->height;
 
             // delete the successor
             AVL* parent;
@@ -346,8 +341,19 @@ AVL* AVL::leftRotate(AVL* r)
     AVL* newRoot = r->right;
     AVL* subTreeToTransplant = newRoot->left;
 
+	bool bWasLeafPriorToRotation = newRoot->left != nullptr || newRoot->right != nullptr;
     newRoot->left = r;
     r->right = subTreeToTransplant;
+
+    if(bWasLeafPriorToRotation)
+    {
+        r->height-=2;
+    }
+    else
+    {
+        r->height--;
+        newRoot->height++;
+    }
 
     return newRoot;
 }
@@ -357,8 +363,19 @@ AVL* AVL::rightRotate(AVL* r)
     AVL* newRoot = r->left;
     AVL* subTreeToTransplant = newRoot->right;
 
+	bool bWasLeafPriorToRotation = newRoot->left != nullptr || newRoot->right != nullptr;
     newRoot->right = r;
     r->left = subTreeToTransplant;
+
+    if(bWasLeafPriorToRotation)
+    {
+        r->height-=2;
+    }
+    else
+    {
+        r->height--;
+        newRoot->height++;
+    }
 
     return newRoot;
 }
@@ -368,19 +385,43 @@ int AVL::max(int a, int b)
     return a > b ? a : b;
 }
 
+bool isBalanced(AVL* r)
+{
+    if(std::abs(r->getBalance(r)) <= 1)
+    {
+        return true;
+    }
+    return false;
+}
+
 int main()
 {
 	AVL* tree = new AVL(50);
 
-	tree = tree->insertNode(tree,2);
-	tree = tree->insertNode(tree,1);
+    tree = tree->insertNode(tree,1);
+	tree = tree->insertNode(tree,-69);
 	tree = tree->insertNode(tree,49);
 	tree = tree->insertNode(tree,47);
 	tree = tree->insertNode(tree,45);
 	tree = tree->insertNode(tree,48);
+	tree = tree->insertNode(tree,46);
+	tree = tree->insertNode(tree,120);
+	tree = tree->insertNode(tree,118);
+	tree = tree->insertNode(tree,110);
+	tree = tree->insertNode(tree,200);
+	tree = tree->insertNode(tree,119);
 
 	std::cout << printTree(tree);
-	std::cout << "\nHEIGHT OF tree: " << tree->getHeight(tree) << std::endl;
+	std::cout << "\nHEIGHT OF TREE: " << tree->getHeight(tree) << std::endl;
+    std::cout << (isBalanced(tree) ? "TREE IS BALANCED\n" : "TREE IS NOT BALANCED\n");
+    std::cout << "TREE BALANCE FACTOR: " << tree->getBalance(tree) << std::endl;
+
+    tree = tree->deleteNode(tree, 1);
+
+	std::cout << printTree(tree);
+	std::cout << "\nHEIGHT OF TREE: " << tree->getHeight(tree) << std::endl;
+    std::cout << (isBalanced(tree) ? "TREE IS BALANCED\n" : "TREE IS NOT BALANCED\n");
+    std::cout << "TREE BALANCE FACTOR: " << tree->getBalance(tree) << std::endl;
 
 	return 0;
 }
