@@ -104,7 +104,13 @@ void rebalance(AVL*& r)
     // Case 1: Right Right
     if(bf > 0 && childBf > 0)
     {
+        std::cout << "LEFT ROTATION!\n";
+        std::cout << "==============\n";
+        std::cout << printTree(r);
         r = r->leftRotate(r);
+        std::cout << "**************\n";
+        std::cout << printTree(r);
+        std::cout << "==============\n";
     }
     // Case 2: Left Left
     else if(bf < 0 && childBf < 0)
@@ -339,44 +345,109 @@ AVL* AVL::deleteNode(AVL* r, int key)
 
 AVL* AVL::leftRotate(AVL* r)
 {
+    std::cout << "LEFT ROTATION!\n";
+    std::cout << "==============\n";
+    std::cout << printTree(r);
+
     AVL* newRoot = r->right;
     AVL* subTreeToTransplant = newRoot->left;
 
-	bool bWasLeafPriorToRotation = newRoot->left == nullptr && newRoot->right == nullptr;
     newRoot->left = r;
     r->right = subTreeToTransplant;
 
-    if(!bWasLeafPriorToRotation)
+    int newRootHeightBeforeChange = newRoot->height;
+
+    // recalculate old root height
+    // if our height was based on our old child's height
     {
-        r->height-=2;
+        // recalculate old root height
+        int leftHeight = 0;
+        int rightHeight = 0;
+        if(r->left != nullptr)
+        {
+            leftHeight = r->left->height;
+        }
+        if(r->right != nullptr)
+        {
+            rightHeight = r->right->height;
+        }
+        r->height = 1 + std::max(leftHeight,rightHeight);
     }
-    else
+
+    // recalculate new root height
     {
-        r->height--;
-        newRoot->height++;
+        int leftHeight = 0;
+        int rightHeight = 0;
+        if(newRoot->left != nullptr)
+        {
+            leftHeight = newRoot->left->height;
+        }
+        if(newRoot->right != nullptr)
+        {
+            rightHeight = newRoot->right->height;
+        }
+        newRoot->height = 1 + std::max(leftHeight,rightHeight);
     }
+
+    std::cout << "**************\n";
+    std::cout << printTree(newRoot);
+    std::cout << "==============\n";
 
     return newRoot;
 }
 
 AVL* AVL::rightRotate(AVL* r)
 {
+    std::cout << "RIGHT ROTATION!\n";
+    std::cout << "==============\n";
+    std::cout << printTree(r);
+
     AVL* newRoot = r->left;
     AVL* subTreeToTransplant = newRoot->right;
 
-	bool bWasLeafPriorToRotation = newRoot->left == nullptr && newRoot->right == nullptr;
     newRoot->right = r;
     r->left = subTreeToTransplant;
 
-    if(!bWasLeafPriorToRotation)
+    int newRootHeightBeforeChange = newRoot->height;
+
+    // recalculate old root height
+    // if our height was based on our old child's height
+    if(newRootHeightBeforeChange == r->height - 1)
     {
-        r->height-=2;
+        // recalculate old root height
+        int leftHeight = 0;
+        int rightHeight = 0;
+        if(r->left != nullptr)
+        {
+            leftHeight = r->left->height;
+        }
+        if(r->right != nullptr)
+        {
+            rightHeight = r->right->height;
+        }
+        r->height = 1 + std::max(leftHeight,rightHeight);
     }
-    else
+
+    // recalculate new root height
+    if(newRoot->left != nullptr)
     {
-        r->height--;
-        newRoot->height++;
+        int leftHeight = 0;
+        int rightHeight = 0;
+        if(newRoot->left != nullptr)
+        {
+            leftHeight = newRoot->left->height;
+        }
+        if(newRoot->right != nullptr)
+        {
+            rightHeight = newRoot->right->height;
+        }
+        newRoot->height = 1 + std::max(leftHeight,rightHeight);
     }
+
+
+    std::cout << "**************\n";
+    std::cout << printTree(newRoot);
+    std::cout << "==============\n";
 
     return newRoot;
 }
@@ -414,6 +485,14 @@ int main()
 	tree = tree->insertNode(tree,0);
 	tree = tree->insertNode(tree,49);
 	tree = tree->insertNode(tree,47);
+	tree = tree->insertNode(tree,45);
+	tree = tree->insertNode(tree,48);
+	tree = tree->insertNode(tree,46);
+	tree = tree->insertNode(tree,120);
+	tree = tree->insertNode(tree,118);
+	tree = tree->insertNode(tree,110);
+	tree = tree->insertNode(tree,200);
+	tree = tree->insertNode(tree,119);
 
 	std::cout << printTree(tree);
 	std::cout << "\nHEIGHT OF TREE: " << tree->getHeight(tree) << std::endl;
