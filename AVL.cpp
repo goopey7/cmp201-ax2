@@ -139,12 +139,15 @@ void rebalanceSweep(AVL*& r)
         //std::cout << printTree(r);
         //std::cout << "*************************\n";
         rebalance(r);
+        r->height = 1 + r->max(r->getHeight(r->left),r->getHeight(r->right));
         //std::cout << printTree(r);
         //std::cout << "=========================\n";
         return;
     }
     rebalanceSweep(r->left);
+    r->height = 1 + r->max(r->getHeight(r->left),r->getHeight(r->right));
     rebalanceSweep(r->right);
+    r->height = 1 + r->max(r->getHeight(r->left),r->getHeight(r->right));
 }
 
 // cheeky helper function
@@ -152,26 +155,19 @@ void rebalanceSweep(AVL*& r)
 // and everytime we enter a level of recursion we go one level
 // down in the tree
 // so we can calculate height on the fly
-std::pair<AVL*,int> insertNodeRec(AVL* r, int key, int levels)
+AVL* insertNodeRec(AVL* r, int key, int levels)
 {
 	// base case - shouldn't ever happen but just in case - no insertion
     if(r == nullptr)
     {
-        return {nullptr,0};
+        return r;
     }
 
 	// found a match - no duplicates allowed - no insertion
     if(r->data == key)
 	{
-        return {nullptr,0};
+        return r;
 	}
-
-	// if we made it this far, we are 100% gonna insert something
-	// if we are gonna insert down a new level increment height
-    if(r->right == nullptr && r->left == nullptr)
-    {
-        r->height++;
-    }
 
 	// go left because what we want to insert is smaller
 	if(key < r->data)
@@ -180,23 +176,21 @@ std::pair<AVL*,int> insertNodeRec(AVL* r, int key, int levels)
 		// gonna need to recurse downwards another level
         if(r->left != nullptr)
         {
-            std::pair<AVL*,int> p = insertNodeRec(r->left,key,levels+1);
+            r->left = insertNodeRec(r->left,key,levels+1);
+            r->height = 1 + r->max(r->getHeight(r->left),r->getHeight(r->right));
 			// we inserted something below us
 			// therefore we must change the height
 			// p.second is the amount of levels down which the insertion took place
 			// so if we subtract our current recursion level, we can get what our height should be
-            if(r->height < p.second - levels)
-            {
-                r->height = p.second - levels;
-            }
-            return p;
+            return r;
         }
 		// there's nothing on the left
 		// so we're good to insert there
         else
         {
             r->left = new AVL(key);
-            return {r,levels+2};
+            r->height = 1 + r->max(r->getHeight(r->left),r->getHeight(r->right));
+            return r;
 			// levels + 2 because first function call is level 0
 			// and then also add 1 because we just added something one further level down
         }
@@ -206,20 +200,18 @@ std::pair<AVL*,int> insertNodeRec(AVL* r, int key, int levels)
 	{
         if(r->right != nullptr)
         {
-            std::pair<AVL*,int> p = insertNodeRec(r->right,key,levels+1);
-            if(r->height < p.second - levels)
-            {
-                r->height = p.second - levels;
-            }
-            return p;
+            r->right = insertNodeRec(r->right,key,levels+1);
+            r->height = 1 + r->max(r->getHeight(r->left),r->getHeight(r->right));
+            return r;
         }
         else
         {
             r->right = new AVL(key);
-            return {r,levels+2};
+            r->height = 1 + r->max(r->getHeight(r->left),r->getHeight(r->right));
+            return r;
         }
 	}
-    return {r,0};
+    return r;
 }
 
 // gonna use a cheeky helper function to do the actual insertion
@@ -227,6 +219,7 @@ AVL* AVL::insertNode(AVL* r, int key)
 {
     insertNodeRec(r,key,0);
     rebalanceSweep(r);
+    r->height = 1 + r->max(r->getHeight(r->left),r->getHeight(r->right));
     return r;
 }
 
@@ -380,37 +373,8 @@ AVL* AVL::leftRotate(AVL* r)
 
     int newRootHeightBeforeChange = newRoot->height;
 
-    // recalculate old root height
-    // if our height was based on our old child's height
-    {
-        // recalculate old root height
-        int leftHeight = 0;
-        int rightHeight = 0;
-        if(r->left != nullptr)
-        {
-            leftHeight = r->left->height;
-        }
-        if(r->right != nullptr)
-        {
-            rightHeight = r->right->height;
-        }
-        r->height = 1 + std::max(leftHeight,rightHeight);
-    }
-
-    // recalculate new root height
-    {
-        int leftHeight = 0;
-        int rightHeight = 0;
-        if(newRoot->left != nullptr)
-        {
-            leftHeight = newRoot->left->height;
-        }
-        if(newRoot->right != nullptr)
-        {
-            rightHeight = newRoot->right->height;
-        }
-        newRoot->height = 1 + std::max(leftHeight,rightHeight);
-    }
+    r->height = 1 + r->max(r->getHeight(r->left),r->getHeight(r->right));
+    newRoot->height = 1 + r->max(newRoot->getHeight(newRoot->left),newRoot->getHeight(newRoot->right));
 
     //std::cout << "**************\n";
     //std::cout << printTree(newRoot);
@@ -433,38 +397,8 @@ AVL* AVL::rightRotate(AVL* r)
 
     int newRootHeightBeforeChange = newRoot->height;
 
-    // recalculate old root height
-    // if our height was based on our old child's height
-    {
-        // recalculate old root height
-        int leftHeight = 0;
-        int rightHeight = 0;
-        if(r->left != nullptr)
-        {
-            leftHeight = r->left->height;
-        }
-        if(r->right != nullptr)
-        {
-            rightHeight = r->right->height;
-        }
-        r->height = 1 + std::max(leftHeight,rightHeight);
-    }
-
-    // recalculate new root height
-    {
-        int leftHeight = 0;
-        int rightHeight = 0;
-        if(newRoot->left != nullptr)
-        {
-            leftHeight = newRoot->left->height;
-        }
-        if(newRoot->right != nullptr)
-        {
-            rightHeight = newRoot->right->height;
-        }
-        newRoot->height = 1 + std::max(leftHeight,rightHeight);
-    }
-
+    r->height = 1 + r->max(r->getHeight(r->left),r->getHeight(r->right));
+    newRoot->height = 1 + r->max(newRoot->getHeight(newRoot->left),newRoot->getHeight(newRoot->right));
 
     //std::cout << "**************\n";
     //std::cout << printTree(newRoot);
@@ -510,26 +444,46 @@ int main()
     srand(time(0));
 	AVL* tree = nullptr;
 
-    for(int randomTests=0; randomTests < 5; randomTests++)
+    for(int randomTests=0; randomTests < 50; randomTests++)
     {
         tree = new AVL(-1);
         // random elements inserted in ascending order
         int numElements = rand() % 10000;
         auto startTime = std::chrono::high_resolution_clock::now();
+        //numElements = 10;
         for(int i=0; i<numElements;i++)
         {
             tree = tree->insertNode(tree, i);
         }
         auto endTime = std::chrono::high_resolution_clock::now();
-        //std::cout << printTree(tree);
-        std::cout << "Number of Elements inserted: " << numElements << std::endl;
-        std::cout << "\nHEIGHT OF TREE: " << tree->getHeight(tree) << std::endl;
+        std::cout << printTree(tree);
+        std::cout << "\nNumber of Elements inserted: " << numElements << std::endl;
+        std::cout << "HEIGHT OF TREE: " << tree->getHeight(tree) << std::endl;
+        std::cout << "TRUE HEIGHT OF TREE: " << getHeightRec(tree) << std::endl;
         std::cout << (isBalanced(tree) ? "TREE IS BALANCED\n" : "TREE IS NOT BALANCED\n");
-        std::cout << "TREE BALANCE FACTOR: " << tree->getBalance(tree) << std::endl;
+        //std::cout << "TREE BALANCE FACTOR: " << tree->getBalance(tree) << std::endl;
         std::cout << timeDelta(startTime,endTime) << " elapsed\n";
         delete tree;
     }
     //tree->inOrder(tree);
+
+    tree = new AVL(50);
+
+	tree = tree->insertNode(tree,1);
+	tree = tree->insertNode(tree,-69);
+	tree = tree->insertNode(tree,49);
+	tree = tree->insertNode(tree,47);
+	tree = tree->insertNode(tree,45);
+	tree = tree->insertNode(tree,48);
+	tree = tree->insertNode(tree,46);
+	tree = tree->insertNode(tree,120);
+	tree = tree->insertNode(tree,118);
+	tree = tree->insertNode(tree,110);
+	tree = tree->insertNode(tree,200);
+	tree = tree->insertNode(tree,119);
+
+	std::cout << printTree(tree);
+	std::cout << "\nHEIGHT OF tree: " << tree->getHeight(tree) << std::endl;
 
 	return 0;
 }
