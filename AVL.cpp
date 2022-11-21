@@ -3,6 +3,8 @@
 #include <chrono>
 #include <iostream>
 #include <stdlib.h>
+#include <string>
+#include <vector>
 
 // Prints tree all nice and pretty
 // Adrian Schneider - https://stackoverflow.com/questions/36802354/print-binary-tree-in-a-pretty-way-using-c
@@ -241,37 +243,28 @@ AVL* AVL::insertNode(AVL* r, int key)
 // Another cheeky helper function
 // this allows me to modify the pointer passed in
 // also keeps track of levels and allows us to easily refer to the parent
-std::pair<AVL*,int> deleteRec(AVL*& r, int key, int levels, AVL*& parent)
+AVL* deleteRec(AVL*& r, int key, AVL*& parent)
 {
     // base case we hit a leaf, so not found, return nothing
     if(r == nullptr)
     {
-        return {nullptr,0};
+        return r;
     }
 
 	// key is smaller so look left
     if(key < r->data)
     {
-        std::pair<AVL*,int> p = deleteRec(r->left,key,levels+1,r);
+        r->left = deleteRec(r->left,key,r);
+        r->height = 1 + r->max(r->getHeight(r->left),r->getHeight(r->right));
 		// we just deleted something below us
-		// p.second represents how many times we have to decrement height up the way
-        if(p.second > 0)
-        {
-            //r->height--;
-            p.second--;
-        }
-        return p;
+        return r;
     }
 	// same ordeal as left for the right side
     else if(key > r->data) // key is larger so look right
     {
-        std::pair<AVL*,int> p = deleteRec(r->right,key,levels+1,r);
-        if(p.second > 0)
-        {
-            //r->height--;
-            p.second--;
-        }
-        return p;
+        r->right = deleteRec(r->right,key,r);
+        r->height = 1 + r->max(r->getHeight(r->left),r->getHeight(r->right));
+        return r;
     }
     else // key matches. We want to delete this node
     {
@@ -280,7 +273,7 @@ std::pair<AVL*,int> deleteRec(AVL*& r, int key, int levels, AVL*& parent)
         {
             delete r;
             r = nullptr; // pointer is passed by reference
-            return {nullptr,levels};
+            return r;
         }
         // Case 2: Deleting a node with a single child
         else if(r->left == nullptr || r->right == nullptr)
@@ -297,7 +290,7 @@ std::pair<AVL*,int> deleteRec(AVL*& r, int key, int levels, AVL*& parent)
 			// have parent point to what was our child
             parentPointerToChild = child;
 
-            return {child,levels};
+            return r;
         }
         // Case 3: Deleting a node with two children
         else
@@ -351,16 +344,16 @@ std::pair<AVL*,int> deleteRec(AVL*& r, int key, int levels, AVL*& parent)
                 {
                     parent = parent->left;
                 }
-                std::pair<AVL*,int> p = deleteRec(parent->left,r->data,levels+1,r);
-                parent->left = p.first;
-                return {parent->left,0};
+                parent->left = deleteRec(parent->left,r->data,r);
+                parent->height = 1 + r->max(parent->getHeight(parent->left),parent->getHeight(parent->right));
+                return r;
             }
             else // we only went right once for successor, so therefore root is direct parent
             {
                 parent = r;
-                std::pair<AVL*,int> p = deleteRec(parent->right, r->data,levels+1,r);
-                parent->right = p.first;
-                return {parent->right,0};
+                parent->right = deleteRec(parent->right, r->data,r);
+                parent->height = 1 + r->max(parent->getHeight(parent->left),parent->getHeight(parent->right));
+                return r;
             }
         }
     }
@@ -369,7 +362,7 @@ std::pair<AVL*,int> deleteRec(AVL*& r, int key, int levels, AVL*& parent)
 AVL* AVL::deleteNode(AVL* r, int key)
 {
     AVL* parent = nullptr;
-    deleteRec(r,key,0,parent);
+    deleteRec(r,key,parent);
     rebalanceSweep(r);
     return r;
 }
@@ -459,47 +452,66 @@ int main()
     srand(time(0));
 	AVL* tree = nullptr;
 
-    for(int randomTests=0; randomTests < 50; randomTests++)
+    /*
+    std::vector<std::pair<std::string,std::string>> results;
+
+    for(int randomTests=0; randomTests < 300; randomTests++)
     {
         tree = new AVL(-1);
         // random elements inserted in ascending order
-        int numElements = rand() % 100000;
+        int numElements = rand() % 100000 + 900000;
         auto startTime = std::chrono::high_resolution_clock::now();
-        //numElements = 10;
         for(int i=0; i<numElements;i++)
         {
             tree = tree->insertNode(tree, i);
         }
         auto endTime = std::chrono::high_resolution_clock::now();
         //std::cout << printTree(tree);
+        //std::cout << "\nNumber of Elements inserted: " << numElements << std::endl;
+        //std::cout << "HEIGHT OF TREE: " << tree->getHeight(tree) << std::endl;
+        //std::cout << "TRUE HEIGHT OF TREE: " << getHeightRec(tree) << std::endl;
+        //std::cout << (isBalanced(tree) ? "TREE IS BALANCED\n" : "TREE IS NOT BALANCED\n");
+        //std::cout << "TREE BALANCE FACTOR: " << tree->getBalance(tree) << std::endl;
+        //std::cout << timeDelta(startTime,endTime) << " elapsed\n";
+
+        std::ostringstream oss;
+        oss << timeDelta(startTime,endTime);
+        results.push_back({std::to_string(numElements),oss.str()});
+
+        delete tree;
+    }
+    std::ostringstream oss;
+    for(int i=0;i<results.size();i++)
+    {
+        oss << "[" << results[i].first << "," << results[i].second.substr(0,results[i].second.size()-3) << "],\n";
+    }
+    std::cout << oss.str();
+    */
+
+    for(int randomTests=0; randomTests < 1; randomTests++)
+    {
+        tree = new AVL(-1);
+        // random elements inserted in ascending order
+        int numElements = rand() % 100000 + 900000;
+        numElements = 10;
+        auto startTime = std::chrono::high_resolution_clock::now();
+        for(int i=0; i<numElements;i++)
+        {
+            tree = tree->insertNode(tree, i);
+        }
+        auto endTime = std::chrono::high_resolution_clock::now();
+        tree = tree->deleteNode(tree,2);
+        tree = tree->deleteNode(tree,3);
+        std::cout << printTree(tree);
         std::cout << "\nNumber of Elements inserted: " << numElements << std::endl;
         std::cout << "HEIGHT OF TREE: " << tree->getHeight(tree) << std::endl;
         std::cout << "TRUE HEIGHT OF TREE: " << getHeightRec(tree) << std::endl;
         std::cout << (isBalanced(tree) ? "TREE IS BALANCED\n" : "TREE IS NOT BALANCED\n");
-        //std::cout << "TREE BALANCE FACTOR: " << tree->getBalance(tree) << std::endl;
+        std::cout << "TREE BALANCE FACTOR: " << tree->getBalance(tree) << std::endl;
         std::cout << timeDelta(startTime,endTime) << " elapsed\n";
+
         delete tree;
     }
-    //tree->inOrder(tree);
-
-    tree = new AVL(50);
-
-	tree = tree->insertNode(tree,1);
-	tree = tree->insertNode(tree,-69);
-	tree = tree->insertNode(tree,49);
-	tree = tree->insertNode(tree,47);
-	tree = tree->insertNode(tree,45);
-	tree = tree->insertNode(tree,48);
-	tree = tree->insertNode(tree,46);
-	tree = tree->insertNode(tree,120);
-	tree = tree->insertNode(tree,118);
-	tree = tree->insertNode(tree,110);
-	tree = tree->insertNode(tree,200);
-	tree = tree->insertNode(tree,119);
-
-	std::cout << printTree(tree);
-	std::cout << "\nHEIGHT OF tree: " << tree->getHeight(tree) << std::endl;
-
 	return 0;
 }
 
