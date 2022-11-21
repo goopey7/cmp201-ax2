@@ -259,6 +259,12 @@ AVL* deleteRec(AVL* r, int key, bool& bGoingUp)
         {
             r->left->height = 1 + r->max(r->getHeight(r->left->left),r->getHeight(r->left->right));
         }
+
+        if(bGoingUp && std::abs(r->getBalance(r)) > 1)
+        {
+            rebalance(r);
+        }
+
         return r;
     }
 	// same ordeal as left for the right side
@@ -269,6 +275,12 @@ AVL* deleteRec(AVL* r, int key, bool& bGoingUp)
         {
             r->right->height = 1 + r->max(r->getHeight(r->right->right),r->getHeight(r->right->left));
         }
+
+        if(bGoingUp && std::abs(r->getBalance(r)) > 1)
+        {
+            rebalance(r);
+        }
+
         return r;
     }
     else // key matches. We want to delete this node
@@ -278,6 +290,7 @@ AVL* deleteRec(AVL* r, int key, bool& bGoingUp)
         {
             delete r;
             r = nullptr;
+            bGoingUp = true;
             return r;
         }
         // Case 2: Deleting a node with a single child
@@ -287,6 +300,7 @@ AVL* deleteRec(AVL* r, int key, bool& bGoingUp)
 
             delete r;
 
+            bGoingUp = true;
             return child;
         }
         // Case 3: Deleting a node with two children
@@ -304,8 +318,10 @@ AVL* deleteRec(AVL* r, int key, bool& bGoingUp)
 
             // delete successor
             r->right = deleteRec(r->right,successor->data,bGoingUp);
+
             r->height = 1 + r->max(r->getHeight(r->left),r->getHeight(r->right));
 
+            bGoingUp = true;
             return r;
         }
     }
@@ -444,17 +460,13 @@ int main()
     {
         tree = new AVL(-1);
         // random elements inserted in ascending order
-        int numElements = rand() % 100000 + 900000;
-        numElements = 10;
+        int numElements = rand() % 10000;
         auto startTime = std::chrono::high_resolution_clock::now();
         for(int i=0; i<numElements;i++)
         {
             tree = tree->insertNode(tree, i);
         }
         auto endTime = std::chrono::high_resolution_clock::now();
-        tree = tree->deleteNode(tree,1);
-        tree = tree->deleteNode(tree,-1);
-        tree = tree->deleteNode(tree,0);
         std::cout << printTree(tree);
         std::cout << "\nNumber of Elements inserted: " << numElements << std::endl;
         std::cout << "HEIGHT OF TREE: " << tree->getHeight(tree) << std::endl;
