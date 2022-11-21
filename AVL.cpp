@@ -243,7 +243,7 @@ AVL* AVL::insertNode(AVL* r, int key)
 // Another cheeky helper function
 // this allows me to modify the pointer passed in
 // also keeps track of levels and allows us to easily refer to the parent
-AVL* deleteRec(AVL*& r, int key, AVL*& parent)
+AVL* deleteRec(AVL* r, int key, bool& bGoingUp)
 {
     // base case we hit a leaf, so not found, return nothing
     if(r == nullptr)
@@ -254,16 +254,21 @@ AVL* deleteRec(AVL*& r, int key, AVL*& parent)
 	// key is smaller so look left
     if(key < r->data)
     {
-        r->left = deleteRec(r->left,key,r);
-        r->height = 1 + r->max(r->getHeight(r->left),r->getHeight(r->right));
-		// we just deleted something below us
+        r->left = deleteRec(r->left,key,bGoingUp);
+        if(r->left != nullptr)
+        {
+            r->left->height = 1 + r->max(r->getHeight(r->left->left),r->getHeight(r->left->right));
+        }
         return r;
     }
 	// same ordeal as left for the right side
     else if(key > r->data) // key is larger so look right
     {
-        r->right = deleteRec(r->right,key,r);
-        r->height = 1 + r->max(r->getHeight(r->left),r->getHeight(r->right));
+        r->right = deleteRec(r->right,key,bGoingUp);
+        if(r->right != nullptr)
+        {
+            r->right->height = 1 + r->max(r->getHeight(r->right->right),r->getHeight(r->right->left));
+        }
         return r;
     }
     else // key matches. We want to delete this node
@@ -272,98 +277,45 @@ AVL* deleteRec(AVL*& r, int key, AVL*& parent)
         if(r->left == nullptr && r->right == nullptr)
         {
             delete r;
-            r = nullptr; // pointer is passed by reference
+            r = nullptr;
             return r;
         }
         // Case 2: Deleting a node with a single child
         else if(r->left == nullptr || r->right == nullptr)
         {
-			// quick and slick ternary operation to get the child
             AVL* child = r->left == nullptr ? r->right : r->left;
-			// using our parent, get their pointer to us
-            AVL*& parentPointerToChild = r->data < parent->data ? parent->left : parent->right;
 
-			// delete 
             delete r;
-            r = nullptr;
 
-			// have parent point to what was our child
-            parentPointerToChild = child;
-
-            return r;
+            return child;
         }
         // Case 3: Deleting a node with two children
         else
         {
-            // find and delete successor - go right once and then go left like there's no tomorrow
+            // get successor
             AVL* successor = r->right;
-            bool bSuccessorHasSibling = r->left != nullptr;
-            AVL* successorSibling = r->left;
-            AVL* successorParent = r;
-            
-            int lefts = 0;
             while(successor->left != nullptr)
             {
-                bSuccessorHasSibling = successor->right != nullptr;
-                successorSibling = successor->right;
-                successorParent = successor;
                 successor = successor->left;
-                lefts++;
             }
 
-            // copy successor data and height over to the node we were removing
+            // copy data over
             r->data = successor->data;
-            if(lefts == 0)
-            {
-                r->height = successor->height;
 
-                // recalculate height
-                int leftHeight = 0;
-                int rightHeight = 0;
-                if(r->left != nullptr)
-                {
-                    leftHeight = r->left->height;
-                }
-                if(r->right != nullptr)
-                {
-                    rightHeight = r->right->height;
-                }
-                r->height = 1 + std::max(leftHeight,rightHeight);
-            }
-            else if(!bSuccessorHasSibling)
-            {
-                successorParent->height--;
-            }
+            // delete successor
+            r->right = deleteRec(r->right,successor->data,bGoingUp);
+            r->height = 1 + r->max(r->getHeight(r->left),r->getHeight(r->right));
 
-            // delete the successor
-            AVL* parent;
-            if(lefts > 0)
-            {
-                parent = r->right;
-                for(int i=0; i < lefts-1; i++)
-                {
-                    parent = parent->left;
-                }
-                parent->left = deleteRec(parent->left,r->data,r);
-                parent->height = 1 + r->max(parent->getHeight(parent->left),parent->getHeight(parent->right));
-                return r;
-            }
-            else // we only went right once for successor, so therefore root is direct parent
-            {
-                parent = r;
-                parent->right = deleteRec(parent->right, r->data,r);
-                parent->height = 1 + r->max(parent->getHeight(parent->left),parent->getHeight(parent->right));
-                return r;
-            }
+            return r;
         }
     }
 }
 
 AVL* AVL::deleteNode(AVL* r, int key)
 {
-    AVL* parent = nullptr;
-    deleteRec(r,key,parent);
-    rebalanceSweep(r);
+    bool bGoingUp = false;
+    r = deleteRec(r,key,bGoingUp);
+    //rebalanceSweep(r);
     return r;
 }
 
@@ -500,8 +452,9 @@ int main()
             tree = tree->insertNode(tree, i);
         }
         auto endTime = std::chrono::high_resolution_clock::now();
-        tree = tree->deleteNode(tree,2);
-        tree = tree->deleteNode(tree,3);
+        tree = tree->deleteNode(tree,1);
+        tree = tree->deleteNode(tree,-1);
+        tree = tree->deleteNode(tree,0);
         std::cout << printTree(tree);
         std::cout << "\nNumber of Elements inserted: " << numElements << std::endl;
         std::cout << "HEIGHT OF TREE: " << tree->getHeight(tree) << std::endl;
