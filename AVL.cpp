@@ -1,3 +1,6 @@
+// CMP201 - AX2 - AVL.cpp
+// Solved by Sam Collier - 2100259
+
 #include "AVL.h"
 #include <sstream>
 #include <chrono>
@@ -8,15 +11,18 @@
 
 // Adrian Schneider - https://stackoverflow.com/questions/36802354/print-binary-tree-in-a-pretty-way-using-c
 
-// It's way easier to print the binary tree sideways since when using cout we can't go back on ourselve
+// It's way easier to print the binary tree sideways.
+// when using std::cout we can't go back on ourselves
 // we can print to the right and down, but that's it.
-// So as we go right we go down more levels. And we make a new line when we traverse left and right
+// So as we go right we go down more levels. And we make a new line to represent left and right
 
 // I cannot take full credit for this implementation
 std::string printTree(AVL* node, std::ostringstream& oss,std::string prefix, bool bIsLeft)
 {
     if(node != nullptr)
     {
+        // may have issues displaying nice on windows
+        // but I use linux so I don't have any problems
         oss << prefix << (bIsLeft ? "├──" : "└──" );
         oss << node->data << "h" << node->height << '\n';
 
@@ -429,15 +435,11 @@ std::string timeDelta(std::chrono::system_clock::time_point t, std::chrono::syst
 	return std::to_string(timeDelta) + " ns";
 }
 
-int main()
+void testInsert(int amountOfTreesToTest)
 {
-    srand(time(0));
-	AVL* tree = nullptr;
-
     //std::vector<std::pair<std::string,std::string>> results;
-
-    /*
-    for(int randomTests=0; randomTests < 300; randomTests++)
+    AVL* tree = nullptr;
+    for(int randomTests=0; randomTests < amountOfTreesToTest; randomTests++)
     {
         tree = new AVL(-1);
         // random elements inserted in ascending order
@@ -462,7 +464,6 @@ int main()
 
         delete tree;
     }
-    */
     /*
     std::ostringstream oss;
     for(int i=0;i<results.size();i++)
@@ -471,10 +472,18 @@ int main()
     }
     std::cout << oss.str();
     */
+}
+int main()
+{
+    srand(time(0));
+	AVL* tree = nullptr;
 
+    //testInsert(300);
+
+    // test delete
+    /*
     {
         tree = new AVL(-1);
-        // random elements inserted in ascending order
         int numElements = 30;
         auto startTime = std::chrono::high_resolution_clock::now();
         for(int i=0; i<numElements;i++)
@@ -512,6 +521,7 @@ int main()
 
         delete tree;
     }
+    */
 
 	return 0;
 }
