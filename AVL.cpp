@@ -456,6 +456,31 @@ int main()
     std::cout << oss.str();
     */
 
+    {
+        tree = new AVL(-1);
+        // random elements inserted in ascending order
+        int numElements = 30;
+        auto startTime = std::chrono::high_resolution_clock::now();
+        for(int i=0; i<numElements;i++)
+        {
+            tree = tree->insertNode(tree, i);
+        }
+        auto endTime = std::chrono::high_resolution_clock::now();
+        std::cout << printTree(tree);
+        std::cout << "\nNumber of Elements inserted: " << numElements << std::endl;
+        std::cout << "HEIGHT OF TREE: " << tree->getHeight(tree) << std::endl;
+        std::cout << "TRUE HEIGHT OF TREE: " << getHeightRec(tree) << std::endl;
+        std::cout << (isBalanced(tree) ? "TREE IS BALANCED\n" : "TREE IS NOT BALANCED\n");
+        std::cout << "TREE BALANCE FACTOR: " << tree->getBalance(tree) << std::endl;
+        std::cout << timeDelta(startTime,endTime) << " elapsed\n";
+
+        //std::ostringstream oss;
+        //oss << timeDelta(startTime,endTime);
+        //results.push_back({std::to_string(numElements),oss.str()});
+
+        delete tree;
+    }
+
 	return 0;
 }
 
