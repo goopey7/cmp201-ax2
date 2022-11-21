@@ -6,9 +6,12 @@
 #include <string>
 #include <vector>
 
-// Prints tree all nice and pretty
 // Adrian Schneider - https://stackoverflow.com/questions/36802354/print-binary-tree-in-a-pretty-way-using-c
-// since we can only print right and down, we present the binary tree horizontally
+
+// It's way easier to print the binary tree sideways since when using cout we can't go back on ourselve
+// we can print to the right and down, but that's it.
+// So as we go right we go down more levels. And we make a new line when we traverse left and right
+
 // I cannot take full credit for this implementation
 std::string printTree(AVL* node, std::ostringstream& oss,std::string prefix, bool bIsLeft)
 {
@@ -29,7 +32,9 @@ std::string printTree(AVL* node)
     return printTree(node,oss,"",false);
 }
 
-// recusively print nodes root, left, right
+// I use a recursive helper function just to make formatting the end string easier
+// I can just substring off the last comma and add a closing } before printing the
+// string stream out
 void preOrderRec(AVL* r, std::ostringstream& oss)
 {
     if(r == nullptr)
@@ -39,7 +44,6 @@ void preOrderRec(AVL* r, std::ostringstream& oss)
     preOrderRec(r->right,oss);
 }
 
-// recusively print nodes left, root, right
 void AVL::preOrder(AVL* r)
 {
     std::ostringstream oss;
@@ -69,6 +73,10 @@ void AVL::inOrder(AVL* r)
 
 int AVL::getBalance(AVL* r)
 {
+    if(r == nullptr)
+    {
+        return 0;
+    }
     return getHeight(r->right) - getHeight(r->left);
 }
 
@@ -91,19 +99,9 @@ void rebalance(AVL*& r)
 	int bf = r->getBalance(r);
 	int leftBf = (r->left == nullptr) ? -1 : r->getBalance(r->left);
 	int rightBf = (r->right == nullptr) ? -1 : r->getBalance(r->right);
-	// the the rotations we end up doing depend on which child we go with
-	// whichever child has the larger balance factor is the one that we'll go with
+	// the rotations we end up doing depend on which child we go with
+	// whichever child has the furthest balance factor is the one that we'll go with
 	int childBf = std::abs(leftBf) > std::abs(rightBf) ? leftBf : rightBf;
-
-	// If there are only 4 chains of rotations that can happen
-	// there are also only 4 different ways heights can change
-	// so instead of modifying height in the rotation function,
-	// we just have to manually modify height depending on each case
-
-	// in order to determine how the height changes just draw it
-	// and play out the rotations
-
-	// all height calculations everywhere are constant time with this approach
 
     // Case 1: Right Right
     if(bf > 0 && childBf > 0)
@@ -127,6 +125,18 @@ void rebalance(AVL*& r)
         r->right = r->rightRotate(r->right);
         r = r->leftRotate(r);
     }
+    else if(childBf == 0)
+    {
+        // choose tallest child
+        if(r->getHeight(r->left) > r->getHeight(r->right))
+        {
+            r = r->rightRotate(r);
+        }
+        else
+        {
+            r = r->leftRotate(r);
+        }
+    }
 }
 
 // goes through checking and rebalancing everything in the tree
@@ -134,10 +144,6 @@ void rebalanceSweep(AVL*& r)
 {
     if(r==nullptr)
         return;
-    rebalanceSweep(r->left);
-    r->height = 1 + r->max(r->getHeight(r->left),r->getHeight(r->right));
-    rebalanceSweep(r->right);
-    r->height = 1 + r->max(r->getHeight(r->left),r->getHeight(r->right));
     if(std::abs(r->getBalance(r)) > 1)
     {
         //std::cout << "REBALANCING!\n";
@@ -148,15 +154,16 @@ void rebalanceSweep(AVL*& r)
         r->height = 1 + r->max(r->getHeight(r->left),r->getHeight(r->right));
         //std::cout << printTree(r);
         //std::cout << "=========================\n";
-        return;
     }
+    rebalanceSweep(r->left);
+    r->height = 1 + r->max(r->getHeight(r->left),r->getHeight(r->right));
+    rebalanceSweep(r->right);
+    r->height = 1 + r->max(r->getHeight(r->left),r->getHeight(r->right));
 }
 
 // cheeky helper function
-// this allows us to keep track of levels of recursion
-// and everytime we enter a level of recursion we go one level
-// down in the tree
-// so we can calculate height on the fly
+// this allows us to keep track of whether
+// or not we are going up or down the call stack
 AVL* insertNodeRec(AVL* r, int key, bool& bHeadingUp)
 {
 
@@ -181,14 +188,16 @@ AVL* insertNodeRec(AVL* r, int key, bool& bHeadingUp)
         {
             r->left = insertNodeRec(r->left,key,bHeadingUp);
             r->height = 1 + r->max(r->getHeight(r->left),r->getHeight(r->right));
-			// we inserted something below us
-			// therefore we must change the height
-			// p.second is the amount of levels down which the insertion took place
-			// so if we subtract our current recursion level, we can get what our height should be
 
+            // if we're heading up the call stack
+            // and we are unbalanced
             if(bHeadingUp && std::abs(r->getBalance(r)) > 1)
             {
                 rebalance(r);
+                // we only need to rebalance once
+                // setting this boolean to false will prevent
+                // any additional rebalances while going up the stack
+                bHeadingUp = false;
             }
 
             return r;
@@ -201,8 +210,6 @@ AVL* insertNodeRec(AVL* r, int key, bool& bHeadingUp)
             r->height = 1 + r->max(r->getHeight(r->left),r->getHeight(r->right));
             bHeadingUp = true;
             return r;
-			// levels + 2 because first function call is level 0
-			// and then also add 1 because we just added something one further level down
         }
 	}
 	// go right - (Same ordeal as going left)
@@ -216,6 +223,7 @@ AVL* insertNodeRec(AVL* r, int key, bool& bHeadingUp)
             if(bHeadingUp && std::abs(r->getBalance(r)) > 1)
             {
                 rebalance(r);
+                bHeadingUp = false;
             }
 
             return r;
@@ -241,8 +249,7 @@ AVL* AVL::insertNode(AVL* r, int key)
 }
 
 // Another cheeky helper function
-// this allows me to modify the pointer passed in
-// also keeps track of levels and allows us to easily refer to the parent
+// allowing us to rebalance when heading up
 AVL* deleteRec(AVL* r, int key, bool& bGoingUp)
 {
     // base case we hit a leaf, so not found, return nothing
@@ -265,6 +272,7 @@ AVL* deleteRec(AVL* r, int key, bool& bGoingUp)
             rebalance(r);
         }
 
+        bGoingUp = true;
         return r;
     }
 	// same ordeal as left for the right side
@@ -281,6 +289,7 @@ AVL* deleteRec(AVL* r, int key, bool& bGoingUp)
             rebalance(r);
         }
 
+        bGoingUp = true;
         return r;
     }
     else // key matches. We want to delete this node
@@ -320,6 +329,11 @@ AVL* deleteRec(AVL* r, int key, bool& bGoingUp)
             r->right = deleteRec(r->right,successor->data,bGoingUp);
 
             r->height = 1 + r->max(r->getHeight(r->left),r->getHeight(r->right));
+
+            if(bGoingUp && std::abs(r->getBalance(r)) > 1)
+            {
+                rebalance(r);
+            }
 
             bGoingUp = true;
             return r;
@@ -422,6 +436,7 @@ int main()
 
     //std::vector<std::pair<std::string,std::string>> results;
 
+    /*
     for(int randomTests=0; randomTests < 300; randomTests++)
     {
         tree = new AVL(-1);
@@ -447,6 +462,7 @@ int main()
 
         delete tree;
     }
+    */
     /*
     std::ostringstream oss;
     for(int i=0;i<results.size();i++)
@@ -466,6 +482,22 @@ int main()
             tree = tree->insertNode(tree, i);
         }
         auto endTime = std::chrono::high_resolution_clock::now();
+        tree = tree->deleteNode(tree, 29);
+        tree = tree->deleteNode(tree, 27);
+        tree = tree->deleteNode(tree, 25);
+        tree = tree->deleteNode(tree, 23);
+        tree = tree->deleteNode(tree, 21);
+        tree = tree->deleteNode(tree, 19);
+        tree = tree->deleteNode(tree, 17);
+        tree = tree->deleteNode(tree, 15);
+        tree = tree->deleteNode(tree, 16);
+        tree = tree->deleteNode(tree, 20);
+        tree = tree->deleteNode(tree, 24);
+        tree = tree->deleteNode(tree, 28);
+        tree = tree->deleteNode(tree, -1);
+        tree = tree->deleteNode(tree, 1);
+        tree = tree->deleteNode(tree, 3);
+        tree = tree->deleteNode(tree, 5);
         std::cout << printTree(tree);
         std::cout << "\nNumber of Elements inserted: " << numElements << std::endl;
         std::cout << "HEIGHT OF TREE: " << tree->getHeight(tree) << std::endl;
