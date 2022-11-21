@@ -420,14 +420,13 @@ int main()
     srand(time(0));
 	AVL* tree = nullptr;
 
-    /*
-    std::vector<std::pair<std::string,std::string>> results;
+    //std::vector<std::pair<std::string,std::string>> results;
 
     for(int randomTests=0; randomTests < 300; randomTests++)
     {
         tree = new AVL(-1);
         // random elements inserted in ascending order
-        int numElements = rand() % 100000 + 900000;
+        int numElements = rand() % 200000;
         auto startTime = std::chrono::high_resolution_clock::now();
         for(int i=0; i<numElements;i++)
         {
@@ -435,19 +434,20 @@ int main()
         }
         auto endTime = std::chrono::high_resolution_clock::now();
         //std::cout << printTree(tree);
-        //std::cout << "\nNumber of Elements inserted: " << numElements << std::endl;
-        //std::cout << "HEIGHT OF TREE: " << tree->getHeight(tree) << std::endl;
-        //std::cout << "TRUE HEIGHT OF TREE: " << getHeightRec(tree) << std::endl;
-        //std::cout << (isBalanced(tree) ? "TREE IS BALANCED\n" : "TREE IS NOT BALANCED\n");
-        //std::cout << "TREE BALANCE FACTOR: " << tree->getBalance(tree) << std::endl;
-        //std::cout << timeDelta(startTime,endTime) << " elapsed\n";
+        std::cout << "\nNumber of Elements inserted: " << numElements << std::endl;
+        std::cout << "HEIGHT OF TREE: " << tree->getHeight(tree) << std::endl;
+        std::cout << "TRUE HEIGHT OF TREE: " << getHeightRec(tree) << std::endl;
+        std::cout << (isBalanced(tree) ? "TREE IS BALANCED\n" : "TREE IS NOT BALANCED\n");
+        std::cout << "TREE BALANCE FACTOR: " << tree->getBalance(tree) << std::endl;
+        std::cout << timeDelta(startTime,endTime) << " elapsed\n";
 
-        std::ostringstream oss;
-        oss << timeDelta(startTime,endTime);
-        results.push_back({std::to_string(numElements),oss.str()});
+        //std::ostringstream oss;
+        //oss << timeDelta(startTime,endTime);
+        //results.push_back({std::to_string(numElements),oss.str()});
 
         delete tree;
     }
+    /*
     std::ostringstream oss;
     for(int i=0;i<results.size();i++)
     {
@@ -456,27 +456,6 @@ int main()
     std::cout << oss.str();
     */
 
-    for(int randomTests=0; randomTests < 1; randomTests++)
-    {
-        tree = new AVL(-1);
-        // random elements inserted in ascending order
-        int numElements = rand() % 10000;
-        auto startTime = std::chrono::high_resolution_clock::now();
-        for(int i=0; i<numElements;i++)
-        {
-            tree = tree->insertNode(tree, i);
-        }
-        auto endTime = std::chrono::high_resolution_clock::now();
-        std::cout << printTree(tree);
-        std::cout << "\nNumber of Elements inserted: " << numElements << std::endl;
-        std::cout << "HEIGHT OF TREE: " << tree->getHeight(tree) << std::endl;
-        std::cout << "TRUE HEIGHT OF TREE: " << getHeightRec(tree) << std::endl;
-        std::cout << (isBalanced(tree) ? "TREE IS BALANCED\n" : "TREE IS NOT BALANCED\n");
-        std::cout << "TREE BALANCE FACTOR: " << tree->getBalance(tree) << std::endl;
-        std::cout << timeDelta(startTime,endTime) << " elapsed\n";
-
-        delete tree;
-    }
 	return 0;
 }
 
