@@ -1,6 +1,8 @@
 #include "AVL.h"
 #include <sstream>
+#include <chrono>
 #include <iostream>
+#include <stdlib.h>
 
 // Prints tree all nice and pretty
 // Adrian Schneider - https://stackoverflow.com/questions/36802354/print-binary-tree-in-a-pretty-way-using-c
@@ -132,13 +134,13 @@ void rebalanceSweep(AVL*& r)
         return;
     if(std::abs(r->getBalance(r)) > 1)
     {
-        std::cout << "REBALANCING!\n";
-        std::cout << "=========================\n";
-        std::cout << printTree(r);
-        std::cout << "*************************\n";
+        //std::cout << "REBALANCING!\n";
+        //std::cout << "=========================\n";
+        //std::cout << printTree(r);
+        //std::cout << "*************************\n";
         rebalance(r);
-        std::cout << printTree(r);
-        std::cout << "=========================\n";
+        //std::cout << printTree(r);
+        //std::cout << "=========================\n";
         return;
     }
     rebalanceSweep(r->left);
@@ -366,9 +368,9 @@ AVL* AVL::deleteNode(AVL* r, int key)
 
 AVL* AVL::leftRotate(AVL* r)
 {
-    std::cout << "LEFT ROTATION!\n";
-    std::cout << "==============\n";
-    std::cout << printTree(r);
+    //std::cout << "LEFT ROTATION!\n";
+    //std::cout << "==============\n";
+    //std::cout << printTree(r);
 
     AVL* newRoot = r->right;
     AVL* subTreeToTransplant = newRoot->left;
@@ -410,18 +412,18 @@ AVL* AVL::leftRotate(AVL* r)
         newRoot->height = 1 + std::max(leftHeight,rightHeight);
     }
 
-    std::cout << "**************\n";
-    std::cout << printTree(newRoot);
-    std::cout << "==============\n";
+    //std::cout << "**************\n";
+    //std::cout << printTree(newRoot);
+    //std::cout << "==============\n";
 
     return newRoot;
 }
 
 AVL* AVL::rightRotate(AVL* r)
 {
-    std::cout << "RIGHT ROTATION!\n";
-    std::cout << "==============\n";
-    std::cout << printTree(r);
+    //std::cout << "RIGHT ROTATION!\n";
+    //std::cout << "==============\n";
+    //std::cout << printTree(r);
 
     AVL* newRoot = r->left;
     AVL* subTreeToTransplant = newRoot->right;
@@ -464,9 +466,9 @@ AVL* AVL::rightRotate(AVL* r)
     }
 
 
-    std::cout << "**************\n";
-    std::cout << printTree(newRoot);
-    std::cout << "==============\n";
+    //std::cout << "**************\n";
+    //std::cout << printTree(newRoot);
+    //std::cout << "==============\n";
 
     return newRoot;
 }
@@ -496,37 +498,39 @@ bool isBalanced(AVL* r)
     return false;
 }
 
+// Utility function: Get two time points and return a string of nanoseconds between them.
+std::string timeDelta(std::chrono::system_clock::time_point t, std::chrono::system_clock::time_point t2)
+{
+	long timeDelta = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t).count();
+	return std::to_string(timeDelta) + " ns";
+}
+
 int main()
 {
-	AVL* tree = new AVL(50);
+    srand(time(0));
+	AVL* tree = nullptr;
 
-    tree = tree->insertNode(tree,1);
-	tree = tree->insertNode(tree,0);
-	tree = tree->insertNode(tree,49);
-	tree = tree->insertNode(tree,47);
-	tree = tree->insertNode(tree,45);
-	tree = tree->insertNode(tree,48);
-	tree = tree->insertNode(tree,46);
-	tree = tree->insertNode(tree,120);
-	tree = tree->insertNode(tree,118);
-	tree = tree->insertNode(tree,110);
-	tree = tree->insertNode(tree,200);
-	tree = tree->insertNode(tree,119);
-
-	std::cout << printTree(tree);
-	std::cout << "\nHEIGHT OF TREE: " << tree->getHeight(tree) << std::endl;
-    std::cout << (isBalanced(tree) ? "TREE IS BALANCED\n" : "TREE IS NOT BALANCED\n");
-    std::cout << "TREE BALANCE FACTOR: " << tree->getBalance(tree) << std::endl;
-
-    tree = tree->deleteNode(tree, 1);
-    tree = tree->deleteNode(tree, 45);
-    tree = tree->deleteNode(tree, 47);
-    tree = tree->deleteNode(tree, 118);
-
-	std::cout << printTree(tree);
-	std::cout << "\nHEIGHT OF TREE: " << getHeightRec(tree) << std::endl;
-    std::cout << (isBalanced(tree) ? "TREE IS BALANCED\n" : "TREE IS NOT BALANCED\n");
-    std::cout << "TREE BALANCE FACTOR: " << getHeightRec(tree->right) - getHeightRec(tree->left) << std::endl;
+    for(int randomTests=0; randomTests < 5; randomTests++)
+    {
+        tree = new AVL(-1);
+        // random elements inserted in ascending order
+        int numElements = rand() % 10000;
+        auto startTime = std::chrono::high_resolution_clock::now();
+        for(int i=0; i<numElements;i++)
+        {
+            tree = tree->insertNode(tree, i);
+        }
+        auto endTime = std::chrono::high_resolution_clock::now();
+        //std::cout << printTree(tree);
+        std::cout << "Number of Elements inserted: " << numElements << std::endl;
+        std::cout << "\nHEIGHT OF TREE: " << tree->getHeight(tree) << std::endl;
+        std::cout << (isBalanced(tree) ? "TREE IS BALANCED\n" : "TREE IS NOT BALANCED\n");
+        std::cout << "TREE BALANCE FACTOR: " << tree->getBalance(tree) << std::endl;
+        std::cout << timeDelta(startTime,endTime) << " elapsed\n";
+        delete tree;
+    }
+    //tree->inOrder(tree);
 
 	return 0;
 }
+
