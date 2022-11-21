@@ -132,6 +132,10 @@ void rebalanceSweep(AVL*& r)
 {
     if(r==nullptr)
         return;
+    rebalanceSweep(r->left);
+    r->height = 1 + r->max(r->getHeight(r->left),r->getHeight(r->right));
+    rebalanceSweep(r->right);
+    r->height = 1 + r->max(r->getHeight(r->left),r->getHeight(r->right));
     if(std::abs(r->getBalance(r)) > 1)
     {
         //std::cout << "REBALANCING!\n";
@@ -144,10 +148,6 @@ void rebalanceSweep(AVL*& r)
         //std::cout << "=========================\n";
         return;
     }
-    rebalanceSweep(r->left);
-    r->height = 1 + r->max(r->getHeight(r->left),r->getHeight(r->right));
-    rebalanceSweep(r->right);
-    r->height = 1 + r->max(r->getHeight(r->left),r->getHeight(r->right));
 }
 
 // cheeky helper function
@@ -155,8 +155,9 @@ void rebalanceSweep(AVL*& r)
 // and everytime we enter a level of recursion we go one level
 // down in the tree
 // so we can calculate height on the fly
-AVL* insertNodeRec(AVL* r, int key, int levels)
+AVL* insertNodeRec(AVL* r, int key, bool& bHeadingUp)
 {
+
 	// base case - shouldn't ever happen but just in case - no insertion
     if(r == nullptr)
     {
@@ -176,12 +177,18 @@ AVL* insertNodeRec(AVL* r, int key, int levels)
 		// gonna need to recurse downwards another level
         if(r->left != nullptr)
         {
-            r->left = insertNodeRec(r->left,key,levels+1);
+            r->left = insertNodeRec(r->left,key,bHeadingUp);
             r->height = 1 + r->max(r->getHeight(r->left),r->getHeight(r->right));
 			// we inserted something below us
 			// therefore we must change the height
 			// p.second is the amount of levels down which the insertion took place
 			// so if we subtract our current recursion level, we can get what our height should be
+
+            if(bHeadingUp && std::abs(r->getBalance(r)) > 1)
+            {
+                rebalance(r);
+            }
+
             return r;
         }
 		// there's nothing on the left
@@ -190,6 +197,7 @@ AVL* insertNodeRec(AVL* r, int key, int levels)
         {
             r->left = new AVL(key);
             r->height = 1 + r->max(r->getHeight(r->left),r->getHeight(r->right));
+            bHeadingUp = true;
             return r;
 			// levels + 2 because first function call is level 0
 			// and then also add 1 because we just added something one further level down
@@ -200,14 +208,21 @@ AVL* insertNodeRec(AVL* r, int key, int levels)
 	{
         if(r->right != nullptr)
         {
-            r->right = insertNodeRec(r->right,key,levels+1);
+            r->right = insertNodeRec(r->right,key,bHeadingUp);
             r->height = 1 + r->max(r->getHeight(r->left),r->getHeight(r->right));
+
+            if(bHeadingUp && std::abs(r->getBalance(r)) > 1)
+            {
+                rebalance(r);
+            }
+
             return r;
         }
         else
         {
             r->right = new AVL(key);
             r->height = 1 + r->max(r->getHeight(r->left),r->getHeight(r->right));
+            bHeadingUp = true;
             return r;
         }
 	}
@@ -217,9 +232,9 @@ AVL* insertNodeRec(AVL* r, int key, int levels)
 // gonna use a cheeky helper function to do the actual insertion
 AVL* AVL::insertNode(AVL* r, int key)
 {
-    insertNodeRec(r,key,0);
-    rebalanceSweep(r);
-    r->height = 1 + r->max(r->getHeight(r->left),r->getHeight(r->right));
+    bool bHeadingUp = false;
+    r = insertNodeRec(r,key,bHeadingUp);
+    //rebalanceSweep(r);
     return r;
 }
 
@@ -448,7 +463,7 @@ int main()
     {
         tree = new AVL(-1);
         // random elements inserted in ascending order
-        int numElements = rand() % 10000;
+        int numElements = rand() % 100000;
         auto startTime = std::chrono::high_resolution_clock::now();
         //numElements = 10;
         for(int i=0; i<numElements;i++)
@@ -456,7 +471,7 @@ int main()
             tree = tree->insertNode(tree, i);
         }
         auto endTime = std::chrono::high_resolution_clock::now();
-        std::cout << printTree(tree);
+        //std::cout << printTree(tree);
         std::cout << "\nNumber of Elements inserted: " << numElements << std::endl;
         std::cout << "HEIGHT OF TREE: " << tree->getHeight(tree) << std::endl;
         std::cout << "TRUE HEIGHT OF TREE: " << getHeightRec(tree) << std::endl;
